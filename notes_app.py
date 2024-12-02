@@ -11,6 +11,12 @@ class NotesApp:
         new_note = Note(content)
         self.notes_list.append(new_note)
         return "Note added successfully"
+    def del_note(self, index):
+        try:
+            del self.notes_list[index]
+            return "Note deleted successfully"
+        except IndexError:
+            return "Index out of range"
 
     def get_note(self, index):
         try:

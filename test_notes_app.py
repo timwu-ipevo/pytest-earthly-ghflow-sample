@@ -30,3 +30,12 @@ def test_edit_note_index_error( app_without_notes:NotesApp):
     notes = app_without_notes
     result = notes.edit_note(0, "Test note 1 edited")
     assert result == "Index out of range"
+
+def test_del_note( app_with_notes:NotesApp):
+    notes = app_with_notes
+    if len(notes.notes_list) == 0:
+        notes.add_note("Test note 1")
+    origlen = len(notes.notes_list)
+    notes.del_note(0)
+    
+    assert origlen == len(notes.notes_list)+1
