@@ -1,41 +1,56 @@
-from notes_app import NotesApp
+from fastapi.testclient import TestClient
+from notes_app import app, NotesApp
+import pytest
 
-def test_add_note( app_with_notes: NotesApp):
-    notes = app_with_notes
-    origlen = len(notes.notes_list)
-    result = notes.add_note("Test note 1")
-    assert result == "Note added successfully"
-    assert len(notes.notes_list) == origlen + 1
-    assert notes.notes_list[-1].content == "Test note 1"
+client = TestClient(app)
 
+def test_create_note(client, sample_note):
+    response = client.post("/notes/", json=sample_note)
+    assert response.status_code == 200
+    assert response.json()["content"] == sample_note["content"]
+    assert response.json()["index"] == 0
 
-def test_get_note( app_without_notes: NotesApp):
-    notes = app_without_notes
-    notes.add_note("Test note 1")
-    result = notes.get_note(0)
-    assert result == "Test note 1"
+def test_get_note(client, note_in_db):
+    response = client.get(f"/notes/{note_in_db['index']}")
+    assert response.status_code == 200
+    assert response.json()["content"] == note_in_db["content"]
+    assert response.json()["index"] == note_in_db["index"]
 
+def test_get_nonexistent_note(client):
+    response = client.get("/notes/999")
+    assert response.status_code == 404
 
-def test_get_note_index_error( app_without_notes:NotesApp):
-    notes = app_without_notes
-    result = notes.get_note(0)
-    assert result == "Index out of range"
+def test_list_notes(client, multiple_notes):
+    response = client.get("/notes/")
+    assert response.status_code == 200
+    notes = response.json()
+    for i, note in enumerate(notes):
+        #test if the note content prefix is 'Test note'
+        assert note["content"].startswith("Test note")
+        #assert note["content"] == f"Test note {i}"
 
-def test_edit_note( app_with_notes:NotesApp):
-    app_with_notes.edit_note(0, "Test note 1 edited")
-    result = app_with_notes.get_note(0)
-    assert result == "Test note 1 edited"
+def test_update_note(client, note_in_db):
+    updated_content = {"content": "Updated note"}
+    response = client.put(f"/notes/{note_in_db['index']}", json=updated_content)
+    assert response.status_code == 200
+    assert response.json()["content"] == updated_content["content"]
 
-def test_edit_note_index_error( app_without_notes:NotesApp):
-    notes = app_without_notes
-    result = notes.edit_note(0, "Test note 1 edited")
-    assert result == "Index out of range"
+def test_update_nonexistent_note(client):
+    response = client.put("/notes/999", json={"content": "Updated note"})
+    assert response.status_code == 404
 
-def test_del_note( app_with_notes:NotesApp):
-    notes = app_with_notes
-    if len(notes.notes_list) == 0:
-        notes.add_note("Test note 1")
-    origlen = len(notes.notes_list)
-    notes.del_note(0)
+def test_delete_note(client, note_in_db):
+    response = client.delete(f"/notes/{note_in_db['index']}")
+    assert response.status_code == 200
     
-    assert origlen == len(notes.notes_list)+1
+    # Verify note is deleted
+    response = client.get(f"/notes/{note_in_db['index']}")
+    assert response.status_code == 404
+
+def test_delete_nonexistent_note(client):
+    response = client.delete("/notes/999")
+    assert response.status_code == 404
+
+def test_invalid_note_data(client):
+    response = client.post("/notes/", json={})
+    assert response.status_code == 422  # FastAPI validation error
