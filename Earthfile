@@ -13,7 +13,6 @@ test:
     RUN python -m pytest -v
 
 build:
-	BUILD +test
     FROM +deps
     # Remove dev dependencies if needed
     EXPOSE 8000

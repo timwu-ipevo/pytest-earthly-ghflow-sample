@@ -30,5 +30,8 @@ jobs:
     - name: Setup Earthly
       uses: earthly/actions-setup@v1
 
+    - name: Run tests
+      run: earthly +test
+
     - name: Build and save Docker image
       run: earthly +build
