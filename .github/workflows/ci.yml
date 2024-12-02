@@ -27,12 +27,8 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: Build and test with Earthly
-      uses: earthly/earthly-action@v1
-      with:
-        args: +test
+    - name: Setup Earthly
+      uses: earthly/actions-setup@v1
 
     - name: Build and save Docker image
-      uses: earthly/earthly-action@v1
-      with:
-        args: +buil
+      run: earthly +build
