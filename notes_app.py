@@ -41,7 +41,8 @@ class NotesApp:
         except IndexError:
             return "Index out of range"
 
-app = FastAPI()
+#enable swagger docs
+app = FastAPI(openapi_url="/api/v1/openapi.json", docs_url="/api/v1/docs")
 notes_app = NotesApp()
 
 @app.post("/notes/", response_model=NoteResponse)
